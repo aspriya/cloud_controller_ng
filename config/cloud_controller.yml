@@ -1,4 +1,5 @@
 ---
+acl_service_url: 'http://acl-service.capi.land'
 local_route: 127.0.0.1
 external_port: 8181
 tls_port: 8182

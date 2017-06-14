@@ -21,6 +21,7 @@
   end
 %>
 ---
+acl_service_url: <%= p('cc.acl_service_url') %>
 #Actually NGX host and port
 <% if p('cc.nginx.ip').empty? %>
 local_route: <%= discover_external_ip %>

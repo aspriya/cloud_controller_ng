@@ -886,3 +886,7 @@ properties:
   cc.loggregator.internal_url:
     description: "Internal url used to communicate with traffic_controller"
     default: "http://loggregator-trafficcontroller.service.cf.internal:8081"
+
+
+  cc.acl_service_url:
+    description: "URL TO THE ACLS!"

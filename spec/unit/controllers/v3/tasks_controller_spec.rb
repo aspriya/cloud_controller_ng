@@ -317,7 +317,7 @@ RSpec.describe TasksController, type: :controller do
 
     before do
       set_current_user(user, user_id: 'test-user-id')
-      stub_request(:get, "https://acl-service.cfapps.io/acl").to_return(body: acl_data.to_json)
+      stub_request(:get, "http://acl-service.capi.land/acl").to_return(body: acl_data.to_json)
     end
 
     it 'returns tasks the user has read access' do
@@ -358,7 +358,7 @@ RSpec.describe TasksController, type: :controller do
     context 'when accessed as an app subresource' do
       let(:requested_urn) { "urn:task:/#{app_model.space.organization.guid}/#{app_model.space.guid}/#{app_model.guid}" }
 
-      before { stub_request(:get, "https://acl-service.cfapps.io/acl?resource=#{requested_urn}").to_return(body: acl_data.to_json) }
+      before { stub_request(:get, "http://acl-service.capi.land/acl?resource=#{requested_urn}").to_return(body: acl_data.to_json) }
 
       it 'uses the app as a filter' do
         task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
