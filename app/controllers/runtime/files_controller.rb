@@ -4,7 +4,8 @@ require 'uri'
 module VCAP::CloudController
   class FilesController < RestController::ModelController
     path_base 'apps'
-    model_class_name :App
+    model_class_name :ProcessModel
+    self.not_found_exception_name = 'AppNotFound'
 
     get "#{path_guid}/instances/:instance_id/files", :files
     get "#{path_guid}/instances/:instance_id/files/*", :files

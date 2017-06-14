@@ -10,7 +10,7 @@ require 'models/runtime/helpers/package_state_calculator.rb'
 require_relative 'buildpack'
 
 module VCAP::CloudController
-  class App < Sequel::Model(:processes)
+  class ProcessModel < Sequel::Model(:processes)
     include Serializer
 
     plugin :serialization
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     one_to_many :service_bindings, key: :app_guid, primary_key: :app_guid, without_guid_generation: true
-    one_to_many :events, class: VCAP::CloudController::AppEvent
+    one_to_many :events, class: VCAP::CloudController::AppEvent, key: :app_id
 
     one_through_one :space,
       join_table:        AppModel.table_name,
@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       def runnable
-        staged.where("#{App.table_name}__state".to_sym => STARTED).where { instances > 0 }
+        staged.where("#{ProcessModel.table_name}__state".to_sym => STARTED).where { instances > 0 }
       end
 
       def diego
@@ -94,7 +94,7 @@ module VCAP::CloudController
 
     one_through_many :organization,
       [
-        [App.table_name, :id, :app_guid],
+        [ProcessModel.table_name, :id, :app_guid],
         [AppModel.table_name, :guid, :space_guid],
         [:spaces, :guid, :organization_id]
       ]
@@ -453,7 +453,7 @@ module VCAP::CloudController
                     union(Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)).select(:guid)
 
       {
-        "#{App.table_name}__app_guid".to_sym => AppModel.where(space: space_guids.all).select(:guid)
+        "#{ProcessModel.table_name}__app_guid".to_sym => AppModel.where(space: space_guids.all).select(:guid)
       }
     end
 
@@ -623,8 +623,4 @@ module VCAP::CloudController
     end
   end
   # rubocop:enable ClassLength
-end
-
-module VCAP::CloudController
-  ProcessModel = App
 end
