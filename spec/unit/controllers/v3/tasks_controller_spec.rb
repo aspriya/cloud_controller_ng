@@ -17,9 +17,9 @@ RSpec.describe TasksController, type: :controller do
 
     let(:req_body) do
       {
-        "name": 'mytask',
-        "command": 'rake db:migrate && true',
-        "memory_in_mb": 2048,
+        'name': 'mytask',
+        'command': 'rake db:migrate && true',
+        'memory_in_mb': 2048,
       }
     end
     let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
@@ -191,9 +191,9 @@ RSpec.describe TasksController, type: :controller do
 
         it 'successfully creates a task on the specifed droplet' do
           post :create, app_guid: app_model.guid, body: {
-            "name": 'mytask',
-            "command": 'rake db:migrate && true',
-            "droplet_guid": custom_droplet.guid
+            'name': 'mytask',
+            'command': 'rake db:migrate && true',
+            'droplet_guid': custom_droplet.guid
           }
 
           expect(response.status).to eq 202
@@ -204,9 +204,9 @@ RSpec.describe TasksController, type: :controller do
         context 'and the droplet is not found' do
           it 'returns a 404' do
             post :create, app_guid: app_model.guid, body: {
-              "name": 'mytask',
-              "command": 'rake db:migrate && true',
-              "droplet_guid": 'fake-droplet-guid'
+              'name': 'mytask',
+              'command': 'rake db:migrate && true',
+              'droplet_guid': 'fake-droplet-guid'
             }
 
             expect(response.status).to eq 404
@@ -220,9 +220,9 @@ RSpec.describe TasksController, type: :controller do
 
           it 'returns a 404' do
             post :create, app_guid: app_model.guid, body: {
-              "name": 'mytask',
-              "command": 'rake db:migrate && true',
-              "droplet_guid": custom_droplet.guid
+              'name': 'mytask',
+              'command': 'rake db:migrate && true',
+              'droplet_guid': custom_droplet.guid
             }
 
             expect(response.status).to eq 404
@@ -306,13 +306,18 @@ RSpec.describe TasksController, type: :controller do
     let(:user) { VCAP::CloudController::User.make }
     let(:acl_data) { { 'accessControlEntries' => acl_statements } }
     let(:acl_statements) do
-      [{ 'action' => 'task.read', 'resourceUrn' => "app:#{app_model.organization.guid}/#{app_model.space.guid}/#{app_model.guid}" }]
+      [
+        {
+          'subject': 'test-user-id',
+          'action': 'read',
+          'resource': "urn:task:/#{app_model.organization.guid}/#{app_model.space.guid}/#{app_model.guid}"
+        }
+      ]
     end
-    let(:fake_acl_data) { StringIO.new(acl_data.to_yaml) }
 
     before do
       set_current_user(user, user_id: 'test-user-id')
-      stub_request(:get, "https://acl-service.cfapps.io/acls/test-user-id").to_return(body: acl_data.to_json)
+      stub_request(:get, "https://acl-service.cfapps.io/acl").to_return(body: acl_data.to_json)
     end
 
     it 'returns tasks the user has read access' do
@@ -351,6 +356,10 @@ RSpec.describe TasksController, type: :controller do
     end
 
     context 'when accessed as an app subresource' do
+      let(:requested_urn) { "urn:task:/#{app_model.space.organization.guid}/#{app_model.space.guid}/#{app_model.guid}" }
+
+      before { stub_request(:get, "https://acl-service.cfapps.io/acl?resource=#{requested_urn}").to_return(body: acl_data.to_json) }
+
       it 'uses the app as a filter' do
         task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
@@ -380,8 +389,16 @@ RSpec.describe TasksController, type: :controller do
       context 'when the user can view secrets' do
         let(:acl_statements) do
           [
-            { 'action' => 'task.read', 'resourceUrn' => "app:#{app_model.organization.guid}/#{app_model.space.guid}/#{app_model.guid}" },
-            { 'action' => 'app.see_secrets', 'resourceUrn' => "app:#{app_model.organization.guid}/#{app_model.space.guid}/#{app_model.guid}" },
+            {
+              'subject': 'test-user-id',
+              'action': 'read',
+              'resource': "urn:task:/#{app_model.organization.guid}/#{app_model.space.guid}/#{app_model.guid}"
+            },
+            {
+              'subject': 'test-user-id',
+              'action': 'see_secrets',
+              'resource': "urn:app:/#{app_model.organization.guid}/#{app_model.space.guid}/#{app_model.guid}"
+            }
           ]
         end
 
@@ -426,7 +443,13 @@ RSpec.describe TasksController, type: :controller do
 
     context 'when the user has global read access' do
       let(:acl_statements) do
-        [{ 'action' => 'task.read', 'resourceUrn' => 'app:*' }]
+        [
+          {
+            'subject': 'test-user-id',
+            'action': 'read',
+            'resource': 'urn:task:/*'
+          }
+        ]
       end
 
       it 'returns a 200 and all tasks' do

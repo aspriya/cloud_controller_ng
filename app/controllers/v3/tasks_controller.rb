@@ -13,8 +13,8 @@ class TasksController < ApplicationController
   include SubResource
 
   def index
-    acl = VCAP::CloudController::AclServiceClient.new.get_acl(SecurityContext.current_user_id)
-    authz = VCAP::CloudController::Authz.new(acl)
+    acl_client = VCAP::CloudController::AclServiceClient.new
+    authz = VCAP::CloudController::Authz.new(acl_client)
 
     message = TasksListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -23,11 +23,14 @@ class TasksController < ApplicationController
 
     if app_nested?
       app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
-      app_not_found! unless app && authz.can_do?(app, 'task.read')
-      show_secrets = authz.can_do?(app, 'app.see_secrets')
+      app_not_found! unless app
+
+      resource_urn = "urn:task:/#{app.space.organization.guid}/#{app.space.guid}/#{app.guid}"
+      app_not_found! unless authz.can_do?(resource_urn, 'read', SecurityContext.current_user_id)
+      show_secrets = authz.can_do?(resource_urn, 'see_secrets', SecurityContext.current_user_id)
     else
       dataset = nil
-      messages = authz.get_app_filter_messages(:app, 'task.read')
+      messages = authz.get_app_filter_messages(:task, 'read', SecurityContext.current_user_id)
       messages.each do |message|
         app_dataset = TaskListFetcher.new.fetch_all(message: message)
         dataset = dataset.nil? ? app_dataset : dataset.union(app_dataset)

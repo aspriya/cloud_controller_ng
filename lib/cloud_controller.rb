@@ -120,7 +120,6 @@ require 'cloud_controller/process_route_handler'
 require 'cloud_controller/isolation_segment_selector'
 require 'cloud_controller/user_audit_info'
 
-require 'cloud_controller/acl/acl'
 require 'cloud_controller/acl/authz'
 require 'cloud_controller/acl/acl_service_client'
 
