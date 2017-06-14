@@ -18,6 +18,10 @@ module VCAP::CloudController
       def user
         VCAP::CloudController::SecurityContext.current_user
       end
+
+      def user_id
+        VCAP::CloudController::SecurityContext.current_user_id
+      end
     end
   end
 end
