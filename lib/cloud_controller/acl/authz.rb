@@ -10,12 +10,14 @@ module VCAP::CloudController
       end
     end
 
-    def get_app_filter_messages(resource_type, action, subject)
-      urns = @acl_service_client.get_all_acls
+    def get_acl(resource_type, action, subject)
+      @acl_service_client.get_all_acls
                .select { |ace| ace[:subject] == subject && ace[:action] == action && ace[:resource].starts_with?("urn:#{resource_type}") }
                .map { |rule| rule[:resource] }
+    end
 
-      urns.map {|urn| TranslateURNtoCCResource.new.from_urn(urn) }
+    def get_app_filter_messages(resource_type, action, subject)
+      get_acl(resource_type, action, subject).map {|urn| TranslateURNtoCCResource.new.from_urn(urn) }
     end
 
     class TranslateURNtoCCResource

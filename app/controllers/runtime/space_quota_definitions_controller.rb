@@ -1,3 +1,5 @@
+require 'fetchers/v2/space_quota_definition_fetcher'
+
 module VCAP::CloudController
   class SpaceQuotaDefinitionsController < RestController::ModelController
     define_attributes do
@@ -31,5 +33,14 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    private
+
+    def enumerate_dataset
+      qp = self.class.query_parameters
+      visible_objects = SpaceQuotaDefinitonFetcher.new.fetch(@access_context.user_id, @access_context.admin_override)
+      filtered_objects = filter_dataset(visible_objects)
+      get_filtered_dataset_for_enumeration(model, filtered_objects, qp, @opts)
+    end
   end
 end

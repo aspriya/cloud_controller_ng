@@ -44,6 +44,8 @@ module VCAP::CloudController
         Sequel::MySQL.default_collate = 'utf8_bin'
       end
 
+      db.extension(:null_dataset)
+
       db
     end
 
@@ -65,6 +67,7 @@ module VCAP::CloudController
 end
 
 Sequel.extension :inflector
+Sequel.extension :null_dataset
 Sequel::Model.raise_on_typecast_failure = false
 
 Sequel::Model.plugin :association_dependencies
