@@ -27,7 +27,8 @@ class TasksController < ApplicationController
 
       resource_urn = "urn:task:/#{app.space.organization.guid}/#{app.space.guid}/#{app.guid}"
       app_not_found! unless authz.can_do?(resource_urn, 'read', SecurityContext.current_user_id)
-      show_secrets = authz.can_do?(resource_urn, 'see_secrets', SecurityContext.current_user_id)
+      secrets_resource_urn = "urn:app:/#{app.space.organization.guid}/#{app.space.guid}/#{app.guid}"
+      show_secrets = authz.can_do?(secrets_resource_urn, 'see_secrets', SecurityContext.current_user_id)
     else
       dataset = nil
       messages = authz.get_app_filter_messages(:task, 'read', SecurityContext.current_user_id)
